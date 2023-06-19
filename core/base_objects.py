@@ -1,6 +1,6 @@
 from enum import Enum
-from pydantic import BaseModel, root_validator
-from typing import Any, Dict, Optional
+from pydantic import BaseModel
+from typing import Optional
 
 
 class Language(Enum):
@@ -32,7 +32,6 @@ class Text(BaseModel):
     language: Language
     pred_label: Optional[Label]
     pred_score: Optional[float]
-    metadata: Optional[Dict[str, Any]]
 
 
 class ModelOutput(BaseModel):
@@ -41,24 +40,3 @@ class ModelOutput(BaseModel):
     negative_score: float
     neutral_score: float
     positive_score: float
-    global_score: Optional[float]
-    global_label: Optional[Label]
-
-    @root_validator
-    def get_global_score(cls, values) -> Dict:
-        if values["global_score"] is None:
-            values["global_score"] = (
-                0.5 + (values["positive_score"] - values["negative_score"]) / 2
-            )
-        return values
-
-    @root_validator
-    def get_global_label(cls, values) -> Dict:
-        if values["global_label"] is None:
-            if values["global_score"] >= 0.7:
-                values["global_label"] = Label.POSITIVE
-            elif values["global_score"] <= 0.35:
-                values["global_label"] = Label.NEGATIVE
-            else:
-                values["global_label"] = Label.NEUTRAL
-        return values
