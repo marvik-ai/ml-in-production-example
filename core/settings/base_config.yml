@@ -1,0 +1,2 @@
+ModelConfig:
+  model_id: philschmid/distilbert-base-multilingual-cased-sentiment-2
