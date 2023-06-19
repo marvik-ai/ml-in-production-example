@@ -1,4 +1,7 @@
 fastapi
 gradio
 pydantic
+torch
+transformers
+pyyaml
 uvicorn[standard]
