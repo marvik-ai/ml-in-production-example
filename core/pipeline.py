@@ -1,13 +1,16 @@
 from typing import Any, Dict, List
 
-from core.base_objects import Text, Label
+from core.base_objects import Text, Label, ModelOutput
+from core.modules.model import SentimentClassificationModel
+from core.settings import custom_logger, get_config
 
 
 class PredictionPipeline:
-    """Class for hanlding the main operations within the prediction"""
+    """Class for handling the main operations within the prediction"""
 
     def __init__(self) -> None:
-        pass
+        self.logger = custom_logger(self.__class__.__name__)
+        self.model = SentimentClassificationModel(**get_config("ModelConfig"))
 
     def run(self, texts: List[Text]):
         """Method for orchestrating the prediction steps within the PredictionPipeline"""
@@ -17,11 +20,15 @@ class PredictionPipeline:
         return response
 
     def _predict_texts_sentiment(self, texts: List[Text]) -> None:
-        texts_batch = [text.text for text in texts]
-        model_responses = [(Label.NEUTRAL, 1.0) for i in range(len(texts_batch))]
-        for text, (label, score) in zip(texts, model_responses):
-            text.pred_label = label
-            text.pred_score = score
+        outputs = self.model.predict([text.text for text in texts])
+        for text, output in zip(texts, outputs):
+            text.pred_label = output.global_label
+            text.pred_score = output.global_score
+            text.metadata = {
+                "negative_score": output.negative_score,
+                "neutral_score": output.neutral_score,
+                "positive_score": output.positive_score,
+            }
 
     def _format_response(self, texts: List[Text]) -> Dict[str, Any]:
         return {"preds": [text.dict() for text in texts]}
